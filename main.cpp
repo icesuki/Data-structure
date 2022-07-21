@@ -1,25 +1,28 @@
 #include "package.h"
 /**********educoder***********/
-void Union(SqList La, SqList Lb, SqList& Lc);					//Á½Ë³Ğò±íC=A¡ÈB
-void Intersect(SqList La, SqList Lb, SqList& Lc);				//Á½Ë³Ğò±íC=A¡ÉB
-void Different(SqList La, SqList Lb, SqList& Lc);				//Á½Ë³Ğò±íC=A-B
-void Intersect(pLinkNode La, pLinkNode Lb, pLinkNode& Lc);		//Á½Á´±íC=A¡ÉB
-void Print(SqList);												//´òÓ¡Ë³Ğò±í
-void Print(pLinkNode);											//´òÓ¡Á´±í
+void Union(SqList La, SqList Lb, SqList& Lc);					//ä¸¤é¡ºåºè¡¨C=AâˆªB
+void Intersect(SqList La, SqList Lb, SqList& Lc);				//ä¸¤é¡ºåºè¡¨C=Aâˆ©B
+void Different(SqList La, SqList Lb, SqList& Lc);				//ä¸¤é¡ºåºè¡¨C=A-B
+void Intersect(pLinkNode La, pLinkNode Lb, pLinkNode& Lc);		//ä¸¤é“¾è¡¨C=Aâˆ©B
+void Print(SqList);												//æ‰“å°é¡ºåºè¡¨
+void Print(pLinkNode);											//æ‰“å°é“¾è¡¨
+void Hufft();
+void Graf();
 
-/**************ÊµÑé***************/
-void test1_1();		//ÊµÑé1.1
-void test1_2();		//ÊµÑé1.2
-void test2_1();		//ÊµÑé2.1
-void test2_2();		//ÊµÑé2.2
-void test3_1();		//ÊµÑé3.1
-void test3_2();		//ÊµÑé3.1
-void test4();		//ÊµÑé4
-void test5();		//ÊµÑé5
-void test6();		//ÊµÑé6
-void test7();		//ÊµÑé7
-void test8();		//ÊµÑé8
-void test9();		//ÊµÑé9
+/**************å®éªŒä¸€***************/
+void test1_1();		//å®éªŒ1.1
+void test1_2();		//å®éªŒ1.2
+void test2_1();		//å®éªŒ2.1
+void test2_2();		//å®éªŒ2.2
+void test3_1();		//å®éªŒ3.1
+void test3_2();		//å®éªŒ3.1
+void test4();		//å®éªŒ4
+void test5();		//å®éªŒ5
+void test6();		//å®éªŒ6
+/**************å®éªŒäºŒ***************/
+void test7();		//å®éªŒ1 æ ‘
+void test8();		//å®éªŒ2 é‚»æ¥çŸ©é˜µ
+void test9();		//å®éªŒ2 é‚»æ¥è¡¨
 
 
 int main() {
@@ -35,7 +38,10 @@ int main() {
 	//	test7();
 	//	test8();
 	//	test9();
+	int a = -2 ,b = 2;
+	while (-1) {
 
+	}
 }
 void Union(SqList La, SqList Lb, SqList& Lc) {
 	int i, j, k;
@@ -82,7 +88,7 @@ void Intersect(pLinkNode La, pLinkNode Lb, pLinkNode& Lc) {
 	}
 }
 void Print(SqList L) {
-	printf("ÏßĞÔ±í£º");
+	printf("çº¿æ€§è¡¨ï¼š");
 	for (int i = 0; i < L.length; i++) {
 		printf("%4d", L.data[i]);
 	}
@@ -90,12 +96,36 @@ void Print(SqList L) {
 }
 void Print(pLinkNode L) {
 	pLinkNode p = L->next;
-	printf("Á´±í:Head");
+	printf("é“¾è¡¨:Head");
 	while (p) {
 		printf("->%d", p->data);
 		p = p->next;
 	}
 	printf("->NULL\n");
+}
+void Hufft()
+{
+	#define N 11
+	Huff T;
+	HuffCo code = { 0 };
+	int wpl = 0, weigh[MAX_LIST_LENGTH] = { 2,3,5,7,9,10,12,15,18,20 };
+	CreatHuffTree(T, code, weigh, N - 1, wpl);
+	for (int i = N; i < 2 * (N - 1); i++) printf("%d\n", T[i].weight);
+	printf("---------------\nå¸¦æƒå€¼è·¯å¾„é•¿åº¦:%d\n", wpl);
+	printf("---------------\n");
+	for (int i = 1; i < N; i++)
+		printf("æƒå€¼:%d\tç¼–ç :%s\n", T[i].weight, code[i]);
+}
+void Graf()
+{
+	ALGraph G;
+	char v0;
+	CreatGraph_AL(G);
+	printf("è¾¹æ•°:%d\n", Arcnum(G));
+	printf("---------------\næ¢ç´¢å‡ºå‘ç‚¹:");
+	scanf_s(" %c", &v0, 1);
+	printf("---------------\n");
+	BFS_AL(G, v0);
 }
 void test1_1()
 {
@@ -108,7 +138,8 @@ void test1_1()
 	printf("i:");
 	while (scanf_s("%d", &a)) {
 		GetLinkListElement(L, a, x);
-		printf("·µ»Ø:%d\n---------------\ni:", x);
+		printf("è¿”å›:%d\n---------------\n", x);
+		printf("æŒ‡é’ˆ:%p\n---------------\ni:", LocateLinkListByIndex(L, a));
 	}
 }
 void test1_2()
@@ -117,10 +148,12 @@ void test1_2()
 	int a;
 	Elemtype x;
 	InitLinkList(L);
+	Print(L);
 	printf("i:");
 	while (scanf_s("%d", &a)) {
 		GetLinkListElement(L, a, x);
-		printf("·µ»Ø:%d\n---------------\ni:", x);
+		printf("è¿”å›:%d\n---------------\n", x);
+		printf("æŒ‡é’ˆ:%p\n---------------\ni:", LocateLinkListByIndex(L, a));
 	}
 }
 void test2_1()
@@ -144,6 +177,7 @@ void test2_2()
 	pLinkNode L;
 	int  a;
 	InitLinkList(L);
+	Print(L);
 	printf("i:");
 	while (scanf_s("%d", &a) == 1) {
 		InsertLinkList(L, a, 100);
@@ -172,6 +206,7 @@ void test3_2()
 	pLinkNode L;
 	int a;
 	InitLinkList(L);
+	Print(L);
 	printf("i:");
 	while (scanf_s("%d", &a) == 1) {
 		DestroyLinkList(L, a);
@@ -187,28 +222,33 @@ void test4()
 	InitLinkList(L);
 	for (int i = 0; i < 10; i++) InsertLinkListByNum(L, num[i]);
 	Print(L);
-	printf("---------------\nÔªËØ:");
+	printf("---------------\nå…ƒç´ :");
 	while (scanf_s("%d", &a) == 1) {
 		InsertLinkListByNum(L, a);
 		Print(L);
-		printf("---------------\nÔªËØ:");
+		printf("---------------\nå…ƒç´ :");
 	}
 }
 
 void test5()
 {
 	pLinkStack S;
+	int i = 0;
 	char c;
 	InitLinkStack(S);
-	printf("×Ö·û´®:");
+	printf("å­—ç¬¦ä¸²:");
 	while (scanf_s("%c", &c, 1) == 1) {
 		if (c == '#') break;
 		PushLinkStack(S, c);
 	}
-	printf("---------------\n³öÕ»:");
-	PopLinkStack(S,c);
-	printf("%c\n", c);
-	printf("---------------\nÈ¡Õ»¶¥:");
+	printf("---------------\nå‡ºæ ˆé¡¶ä¸ªæ•°:");
+	scanf_s("%d", &i);
+	printf("---------------\nå‡ºæ ˆ:");
+	while (i-- && !EmptyLinkStack(S)) {
+		PopLinkStack(S, c);
+		printf("%c", c);
+	}
+	printf("\n---------------\nå–æ ˆé¡¶:");
 	GetLinkTop(S, c);
 	printf("%c\n", c);
 }
@@ -216,35 +256,56 @@ void test5()
 void test6()
 {
 	SqQuene Q;
-	char a, h;
+	char a;
+	int i = 0;
 	InitSqQueue(Q);
-	printf("×Ö·û´®:");
+	printf("å­—ç¬¦ä¸²:");
 	while (scanf_s("%c", &a,1) == 1) EnQueue(Q, a);
-	DeQueue(Q, h);
+	printf("---------------\nå‡ºé˜Ÿä¸ªæ•°:");
+	scanf_s("%d", &i);
+	printf("---------------\nå‡ºé˜Ÿ:");
+	while (i-- && !EmptySqQueue(Q)) {
+		DeQueue(Q, a);
+		printf("%c", a);
+	}
+	printf("---------------\nå–é˜Ÿå¤´:");
 	GetSqQueue(Q, a);
-	printf("---------------\n³ö¶Ó:%c\nÈë¶Ó:%c", h, a);
+	printf("%c", a);
 }
 
 void test7()
 {
 	pTNode T;
-	printf("ÊäÈëÊı¾İ:");
+	printf("è¾“å…¥æ•°æ®:");
 	CreatLinkTree(T);
+	printf("---------------\nå¶å­ç»“ç‚¹ï¼šå±‚æ•°:");
 	DeepLinkTree(T);
+	printf("\n---------------\nå…ˆåºéå†ç»“æœ:");
+	PreOrder(T);
 }
 
 void test8()
 {
 	AMGraph G;
+	char v0 = ' ', v1 = ' ';
 	CreatGraph_AM(G);
-	printf("\n»¡³¤:%d\n", G.arcnum);
-	BFS_AM_MIN(G, '2', '3');
+	printf("\nå¼§é•¿:%d\n", Arcnum(G));
+	printf("---------------\nå‡ºå‘ç‚¹:");
+	scanf_s(" %c", &v0, 1);
+	printf("ç»“æŸç‚¹:");
+	scanf_s(" %c", &v1, 1);
+	BFS_AM_MIN(G, v0, v1);
 }
 
 void test9()
 {
 	ALGraph G;
+	char v0 = 0, v1 = 0;
 	CreatGraph_AL(G);
-	printf("\n»¡³¤:%d", G.arcnum);
-	BFS_AL_MIN(G, '2', '3');
+	printf("\nå¼§é•¿:%d\n", Arcnum(G));
+	printf("---------------\nå‡ºå‘ç‚¹:");
+	scanf_s(" %c", &v0, 1);
+	printf("ç»“æŸç‚¹:");
+	scanf_s(" %c", &v1, 1);
+	BFS_AL_MIN(G, v0, v1);
 }
