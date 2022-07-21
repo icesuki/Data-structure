@@ -1,132 +1,149 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define MAX_LIST_LENGTH 100		//¾²Ì¬ÏßĞÔ±í×î´ó´æ´¢¿Õ¼ä
-#define MAX_VERTEXNUM 100		//×î´ó¶¥µãÊı
+#include <string.h>
+#pragma warning(disable : 4996)
+#define MAX_LIST_LENGTH 100		//é™æ€çº¿æ€§è¡¨æœ€å¤§å­˜å‚¨ç©ºé—´
+#define MAX_VERTEXNUM 100		//æœ€å¤§é¡¶ç‚¹æ•°
 #define Elemtype int
-#define Stacktype char			//Õ»ÔªËØÀàĞÍ
-#define Verttype char			//Í¼¶¥µãÀàĞÍ
-#define OVERFLOW 0				//Òç³ö
-#define NOTFOUND 0				//²éÕÒ²»µ½
+#define Stacktype char			//æ ˆå…ƒç´ ç±»å‹
+#define Verttype char			//å›¾é¡¶ç‚¹ç±»å‹
+#define OVERFLOW 0				//æº¢å‡º
+#define NOTFOUND 0				//æŸ¥æ‰¾ä¸åˆ°
 
-bool visited[MAX_VERTEXNUM] = { false };	//·ÃÎÊµã±íºê¹Û±äÁ¿
-int j = 1;	//Éî¶Èºê¹Û±äÁ¿
+bool visited[MAX_VERTEXNUM] = { false };	//è®¿é—®ç‚¹å®è§‚å˜é‡
+int height = 1;	//æ·±åº¦å®è§‚å˜é‡
+char haffcode[MAX_LIST_LENGTH] = { 0 };
 
-/**************½á¹¹Ìå**************/
-typedef struct SqList {					//Ë³Ğò±í
+/**************ç»“æ„ä½“**************/
+typedef struct SqList {					//é¡ºåºè¡¨
 	Elemtype data[MAX_LIST_LENGTH];
 	int length;
 }SqList;
-typedef struct LinkNode{				//Á´±í
+typedef struct LinkNode{				//é“¾è¡¨
 	Elemtype data;
 	LinkNode* next;
 }*pLinkNode;
-typedef struct SqStack {				//Ë³ĞòÕ»
+typedef struct SqStack {				//é¡ºåºæ ˆ
 	Elemtype data[MAX_LIST_LENGTH];
 	int top;
 }SqStack;
-typedef struct LinkStack {				//Á´Õ»
+typedef struct LinkStack {				//é“¾æ ˆ
 	Stacktype data;
 	LinkStack* next;
 }*pLinkStack;
-typedef struct SqQueue {				//Ë³Ğò¶ÓÁĞ
+typedef struct SqQueue {				//é¡ºåºé˜Ÿåˆ—
 	Verttype data[MAX_LIST_LENGTH];
 	int front;
 	int rear;
 }SqQuene;
-typedef struct LinkQueue {				//Á´Ê½¶ÓÁĞ
+typedef struct LinkQueue {				//é“¾å¼é˜Ÿåˆ—
 	pLinkNode front;
 	pLinkNode rear;
 }LinkQueue;
-typedef struct TreeNode {				//Á´Ê½¶ş²æÊ÷
-	char data;
+/*typedef struct SqTree {				//é¡ºåºäºŒå‰æ ‘
+	char data[MAX_LIST_LENGTH];
+}SqTree;*/
+typedef struct TreeNode {				//é“¾å¼äºŒå‰æ ‘
+	Verttype data;
 	TreeNode* left;
 	TreeNode* right;
 }TNode,*pTNode;
-/*****************ÁÚ½Ó¾ØÕó½á¹¹Ìå¶¨Òå*****************/
+typedef struct {						//å“ˆå¤«æ›¼æ ‘
+	int weight;							//ç»“ç‚¹æƒé‡
+	int parent, left, right;			//çˆ¶ç»“ç‚¹ã€å·¦å­©å­ã€å³å­©å­åœ¨æ•°ç»„ä¸­çš„ä½ç½®ä¸‹æ ‡
+}Huff[MAX_LIST_LENGTH];
+typedef char HuffCo[MAX_LIST_LENGTH][MAX_LIST_LENGTH];				//å“ˆå¤«æ›¼ç¼–ç 
+/*****************é‚»æ¥çŸ©é˜µç»“æ„ä½“å®šä¹‰*****************/
 typedef struct {
-	Verttype Vex[MAX_VERTEXNUM];			//¶¥µã
-	bool Edge[MAX_VERTEXNUM][MAX_VERTEXNUM];			//¾ØÕó
-	int vexnum, arcnum;			//¶¥µãÊı¡¢»¡Êı
+	Verttype Vex[MAX_VERTEXNUM];			//é¡¶ç‚¹
+	bool Edge[MAX_VERTEXNUM][MAX_VERTEXNUM];			//çŸ©é˜µ
+	int vexnum, arcnum;			//é¡¶ç‚¹æ•°ã€å¼§æ•°
 }AMGraph;
-/*****************ÁÚ½Ó±í½á¹¹Ìå¶¨Òå*****************/
-typedef struct ArcNode {				//±ß±íÍ¬Á´±í
+/*****************é‚»æ¥è¡¨ç»“æ„ä½“å®šä¹‰*****************/
+typedef struct ArcNode {				//è¾¹è¡¨åŒé“¾è¡¨
 	Verttype adjvex;
 	ArcNode* next;
 }*pArcNode;
-typedef struct VerNode {				//Ë³Ğò¶¥±í
+typedef struct VerNode {				//é¡ºåºé¡¶è¡¨
 	Verttype data;
-	pArcNode first;						//±ß±íÍ·½áµã
+	pArcNode first;						//è¾¹è¡¨å¤´ç»“ç‚¹
 }VerNode, AdjList[MAX_VERTEXNUM];
 typedef struct {
 	AdjList vertice;
-	int vexnum, arcnum;					//¶¥µãÊı¡¢»¡Êı
+	int vexnum, arcnum;					//é¡¶ç‚¹æ•°ã€å¼§æ•°
 }ALGraph;
-/************Ë³Ğò±íÉùÃ÷*************/
-void InitSqList(SqList&);							//³õÊ¼»¯
-int GetSqListLen(SqList);							//»ñÈ¡³¤¶È
-void GetSqListElement(SqList, int, Elemtype&);		//»ñÈ¡ÔªËØ
-int LocateSqList(SqList, Elemtype);					//¶¨Î»
-void InsertSqList(SqList&, int, Elemtype);			//°´ĞòºÅ²åÈë
-void DestroySqList(SqList&, int);					//°´ĞòºÅÉ¾³ı
-void InsertSqListByNum(SqList&, Elemtype);			//°´ÖµÉıĞò²åÈë
-/**************Á´±íÉùÃ÷**************/
-void InitLinkList(pLinkNode&);						//³õÊ¼»¯
-int GetLinkListLen(pLinkNode);						//»ñÈ¡³¤¶È
-void GetLinkListElement(pLinkNode, int, Elemtype&);	//»ñÈ¡ÔªËØ
-pLinkNode LocateLinkList(pLinkNode, Elemtype);		//·µ»ØÔªËØÖ¸Õë
-int LocateLinkListByNum(pLinkNode, Elemtype);		//·µ»ØÔªËØĞòºÅ
-void InsertLinkList(pLinkNode&, int, Elemtype);		//°´ĞòºÅ²åÈë
-void DestroyLinkList(pLinkNode&, int);				//°´ĞòºÅÉ¾³ı
-void InsertLinkListByNum(pLinkNode&, Elemtype);		//°´ÖµÉıĞò²åÈë
-/**************Ë³ĞòÕ»ÉùÃ÷**************/
-void InitSqStack(SqStack&);							//³õÊ¼»¯
-bool EmptySqStack(SqStack);							//ÊÇ·ñ¿Õ
-bool FullSqStack(SqStack);							//ÊÇ·ñÂú
-void GetSqTop(SqStack, Elemtype&);					//»ñÈ¡Õ»¶¥ÔªËØ
-void PushSqStack(SqStack&, Elemtype);				//ÈëÕ»
-void PopSqStack(SqStack&, Elemtype&);				//³öÕ»
-/**************Á´Õ»ÉùÃ÷**************/
-void InitLinkStack(pLinkStack&);					//³õÊ¼»¯
-bool EmptyLinkStack(pLinkStack);					//ÊÇ·ñ¿Õ
-void GetLinkTop(pLinkStack, Stacktype&);			//»ñÈ¡Õ»¶¥ÔªËØ
-void PushLinkStack(pLinkStack&, Stacktype);			//ÈëÕ»
-void PopLinkStack(pLinkStack&, Stacktype&);			//³öÕ»
-void ClearStack(pLinkStack&);						//Çå¿ÕÕ»
-/**************Ñ­»·¶ÓÁĞÉùÃ÷**************/
-void InitSqQueue(SqQueue& Q);						//³õÊ¼»¯
-bool EmptySqQueue(SqQueue Q);						//ÊÇ·ñ¿Õ
-bool FullSqQueue(SqQueue Q);						//ÊÇ·ñÂú
-void GetSqQueue(SqQueue Q, Verttype& num);			//»ñÈ¡¶ÓÍ·ÔªËØ
-void EnQueue(SqQueue& Q, Verttype num);				//Èë¶Ó
-void DeQueue(SqQueue& Q, Verttype& num);			//³ö¶Ó
-/**************Á´Ê½¶ÓÁĞÉùÃ÷**************/
-void InitLinkQueue(LinkQueue&);						//³õÊ¼»¯
-void DestroyQueue(LinkQueue&);						//Ïú»Ù
-void EnLinkQueue(LinkQueue&, Elemtype);				//Èë¶Ó
-void DeQueue(LinkQueue&, Elemtype&);				//³ö¶Ó
-void GetLinkQueue(LinkQueue&, Elemtype&);			//»ñÈ¡¶ÓÍ·ÔªËØ
-bool EmptyLinkQueue(LinkQueue);						//ÊÇ·ñ¿Õ
-/**************Á´Ê½¶ş²æÊ÷ÉùÃ÷**************/
-void CreatLinkTree(pTNode&);						//½¨Á¢¶ş²æÊ÷
-void PreOrder(pTNode);								//ÏÈĞò±éÀú
-void InOrder(pTNode);								//ÖĞĞò±éÀú
-void LatOrder(pTNode);								//ºóĞò±éÀú
-int DeepLinkTree(pTNode);							//Éî¶È
-/**************ÁÚ½Ó¾ØÕóÉùÃ÷**************/
-void CreatGraph_AM(AMGraph&);						//´´½¨ÁÚ½Ó¾ØÕó
-int FirstNeighbor(AMGraph, Verttype);				//µÚÒ»¸öÏàÁÚµã
-int NextNeighbor(AMGraph, Verttype, Verttype);		//·ÃÎÊ¹ıµÄµãÍâµÄÏàÁÚ½Úµã
-void BFS_AM(AMGraph, Verttype);						//¹ã¶ÈÓÅÏÈ
-void BFS_AM_MIN(AMGraph, Verttype, Verttype);		//¹ã¶ÈÓÅÏÈ×î¶ÌÂ·¾¶
-int Index(AMGraph, Verttype);						//Ë÷Òı²éÕÒ
-/**************ÁÚ½Ó±íÉùÃ÷**************/
-void CreatGraph_AL(ALGraph&);						//´´½¨ÁÚ½Ó±í
-int FirstNeighbor(ALGraph, Verttype);				//µÚÒ»¸öÏàÁÚ½áµã
-int NextNeighbor(ALGraph, Verttype, Verttype);		//·ÃÎÊ¹ıµÄ½áµãÍâµÄÏàÁÚ½áµã
-void BFS_AL(ALGraph, Verttype);						//¹ã¶ÈÓÅÏÈ
-void BFS_AL_MIN(ALGraph, Verttype, Verttype);		//¹ã¶ÈÓÅÏÈ×î¶ÌÂ·¾¶
-int Index(ALGraph, Verttype);						//Ë÷Òı²éÕÒ
-/************Ë³Ğò±í*************/
+/************é¡ºåºè¡¨å£°æ˜*************/
+void InitSqList(SqList&);							//åˆå§‹åŒ–
+int GetSqListLen(SqList);							//è·å–é•¿åº¦
+void GetSqListElement(SqList, int, Elemtype&);		//è·å–å…ƒç´ 
+int LocateSqList(SqList, Elemtype);					//å®šä½
+void InsertSqList(SqList&, int, Elemtype);			//æŒ‰åºå·æ’å…¥
+void DestroySqList(SqList&, int);					//æŒ‰åºå·åˆ é™¤
+void InsertSqListByNum(SqList&, Elemtype);			//æŒ‰å€¼å‡åºæ’å…¥
+/**************é“¾è¡¨å£°æ˜**************/
+void InitLinkList(pLinkNode&);						//åˆå§‹åŒ–
+int GetLinkListLen(pLinkNode);						//è·å–é•¿åº¦
+void GetLinkListElement(pLinkNode, int, Elemtype&);	//è·å–å…ƒç´ 
+pLinkNode LocateLinkListByNum(pLinkNode, Elemtype);	//æŒ‰å€¼è¿”å›æŒ‡é’ˆ
+pLinkNode LocateLinkListByIndex(pLinkNode, int);	//æŒ‰åºå·è¿”å›æŒ‡é’ˆ
+void InsertLinkList(pLinkNode&, int, Elemtype);		//æŒ‰åºå·æ’å…¥
+void DestroyLinkList(pLinkNode&, int);				//æŒ‰åºå·åˆ é™¤
+void InsertLinkListByNum(pLinkNode&, Elemtype);		//æŒ‰å€¼å‡åºæ’å…¥
+/**************é¡ºåºæ ˆå£°æ˜**************/
+void InitSqStack(SqStack&);							//åˆå§‹åŒ–
+bool EmptySqStack(SqStack);							//æ˜¯å¦ç©º
+bool FullSqStack(SqStack);							//æ˜¯å¦æ»¡
+void GetSqTop(SqStack, Elemtype&);					//è·å–æ ˆé¡¶å…ƒç´ 
+void PushSqStack(SqStack&, Elemtype);				//å…¥æ ˆ
+void PopSqStack(SqStack&, Elemtype&);				//å‡ºæ ˆ
+/**************é“¾æ ˆå£°æ˜**************/
+void InitLinkStack(pLinkStack&);					//åˆå§‹åŒ–
+bool EmptyLinkStack(pLinkStack);					//æ˜¯å¦ç©º
+void GetLinkTop(pLinkStack, Stacktype&);			//è·å–æ ˆé¡¶å…ƒç´ 
+void PushLinkStack(pLinkStack&, Stacktype);			//å…¥æ ˆ
+void PopLinkStack(pLinkStack&, Stacktype&);			//å‡ºæ ˆ
+void ClearStack(pLinkStack&);						//æ¸…ç©ºæ ˆ
+/**************å¾ªç¯é˜Ÿåˆ—å£°æ˜**************/
+void InitSqQueue(SqQueue& Q);						//åˆå§‹åŒ–
+bool EmptySqQueue(SqQueue Q);						//æ˜¯å¦ç©º
+bool FullSqQueue(SqQueue Q);						//æ˜¯å¦æ»¡
+void GetSqQueue(SqQueue Q, Verttype& num);			//è·å–é˜Ÿå¤´å…ƒç´ 
+void EnQueue(SqQueue& Q, Verttype num);				//å…¥é˜Ÿ
+void DeQueue(SqQueue& Q, Verttype& num);			//å‡ºé˜Ÿ
+/**************é“¾å¼é˜Ÿåˆ—å£°æ˜**************/
+void InitLinkQueue(LinkQueue&);						//åˆå§‹åŒ–
+void DestroyQueue(LinkQueue&);						//é”€æ¯
+void EnLinkQueue(LinkQueue&, Elemtype);				//å…¥é˜Ÿ
+void DeQueue(LinkQueue&, Elemtype&);				//å‡ºé˜Ÿ
+void GetLinkQueue(LinkQueue&, Elemtype&);			//è·å–é˜Ÿå¤´å…ƒç´ 
+bool EmptyLinkQueue(LinkQueue);						//æ˜¯å¦ç©º
+/**************é“¾å¼äºŒå‰æ ‘å£°æ˜**************/
+void CreatLinkTree(pTNode&);						//å»ºç«‹äºŒå‰æ ‘
+void PreOrder(pTNode);								//å…ˆåºéå†
+void InOrder(pTNode);								//ä¸­åºéå†
+void LatOrder(pTNode);								//ååºéå†
+void PreOrderDel(pTNode&, Verttype);				//å…ˆåºåˆ é™¤
+int DeepLinkTree(pTNode);							//æ·±åº¦
+/**************å“ˆå¤«æ›¼æ ‘å£°æ˜**************/
+void Select(Huff, int, int&, int&);					//é€‰ä¸¤æœ€å°å€¼ æ ‘/ç»ˆæ­¢ä½/æœ€å°å€¼1/æœ€å°å€¼2
+void CreatHuffTree(Huff&, HuffCo&, int*, int, int&);//åˆ›å»ºå“ˆå¤«æ›¼æ ‘ æ ‘/ç¼–ç /æƒå€¼/æƒå€¼æ•°/å¸¦æƒè·¯å¾„é•¿åº¦
+/**************é‚»æ¥çŸ©é˜µå£°æ˜**************/
+void CreatGraph_AM(AMGraph&);						//åˆ›å»ºé‚»æ¥çŸ©é˜µ
+int Arcnum(AMGraph);								//è¿”å›è¾¹æ•°
+int FirstNeighbor(AMGraph, Verttype);				//ç¬¬ä¸€ä¸ªç›¸é‚»ç‚¹
+int NextNeighbor(AMGraph, Verttype, Verttype);		//è®¿é—®è¿‡çš„ç‚¹å¤–çš„ç›¸é‚»èŠ‚ç‚¹
+void BFS_AM(AMGraph, Verttype);						//å¹¿åº¦ä¼˜å…ˆ
+void BFS_AM_MIN(AMGraph, Verttype, Verttype);		//å¹¿åº¦ä¼˜å…ˆæœ€çŸ­è·¯å¾„
+int Index(AMGraph, Verttype);						//ç´¢å¼•æŸ¥æ‰¾
+/**************é‚»æ¥è¡¨å£°æ˜**************/
+void CreatGraph_AL(ALGraph&);						//åˆ›å»ºé‚»æ¥è¡¨
+int Arcnum(ALGraph);								//è¿”å›è¾¹æ•°
+int FirstNeighbor(ALGraph, Verttype);				//ç¬¬ä¸€ä¸ªç›¸é‚»ç»“ç‚¹
+int NextNeighbor(ALGraph, Verttype, Verttype);		//è®¿é—®è¿‡çš„ç»“ç‚¹å¤–çš„ç›¸é‚»ç»“ç‚¹
+bool BFS_AL(ALGraph, Verttype);						//å¹¿åº¦ä¼˜å…ˆ+åˆ¤æ–­æ˜¯å¦è”é€š
+void BFS_AL_MIN(ALGraph, Verttype, Verttype);		//å¹¿åº¦ä¼˜å…ˆæœ€çŸ­è·¯å¾„
+int Index(ALGraph, Verttype);						//ç´¢å¼•æŸ¥æ‰¾
+/************é¡ºåºè¡¨*************/
 void InitSqList(SqList& L) {
 	L.length = 0;
 }
@@ -171,7 +188,7 @@ void InsertSqListByNum(SqList& L,Elemtype num) {
 		L.length++;
 	}
 }
-/***************Á´±í***************/
+/***************é“¾è¡¨***************/
 void InitLinkList(pLinkNode& L) {
 	L = (pLinkNode)malloc(sizeof(LinkNode));
 	if (!L) printf("This LinkList isn't be created"), exit(OVERFLOW);
@@ -193,17 +210,17 @@ void GetLinkListElement(pLinkNode L, int i, Elemtype& num) {
 	}
 	else num = 0;
 }
-pLinkNode LocateLinkList(pLinkNode L, Elemtype num) {	//·µ»Ø0000000000000000Îª²»´æÔÚ
+pLinkNode LocateLinkListByNum(pLinkNode L, Elemtype num) {	//è¿”å›0000000000000000ä¸ºä¸å­˜åœ¨
 	pLinkNode p = L->next;
 	while (p != NULL && p->data != num) p = p->next;
 	return p;
 }
-int LocateLinkListByNum(pLinkNode L, Elemtype num) {	//·µ»Ø0Îª²»´æÔÚ
-	pLinkNode p = L->next;
-	int i = 1;
-	while (p != NULL && p->data != num) p = p->next, i++;
-	if (p) return i;
-	else return 0;
+pLinkNode LocateLinkListByIndex(pLinkNode L, int i) {	//è¿”å›0ä¸ºä¸å­˜åœ¨
+	if (i > 0 && i <= GetLinkListLen(L)) {
+		while (i-- && L->next != NULL) L = L->next;
+		return L;
+	}
+	else return NULL;
 }
 void InsertLinkList(pLinkNode& L, int i, Elemtype num) {
 	pLinkNode s, p = L;
@@ -219,9 +236,9 @@ void InsertLinkList(pLinkNode& L, int i, Elemtype num) {
 }
 void DestroyLinkList(pLinkNode& L, int i) {
 	pLinkNode s, p = L;
-	if (i <= 0) printf("This 'i' is not found"), exit(NOTFOUND);
+	if (i < 0) printf("This 'i' is not found"), exit(NOTFOUND);
 	while (p != NULL && --i) p = p->next;
-	if (NULL == p || NULL == p->next) printf("This 'i' is not found"), exit(NOTFOUND);
+	if (NULL == p || NULL == p->next) printf("This 'i' is not found\n");
 	else {
 		s = p->next;
 		p->next = s->next;
@@ -237,7 +254,7 @@ void InsertLinkListByNum(pLinkNode& L, Elemtype num) {
 	s->next = p->next;
 	p->next = s;
 }
-/***************Ë³ĞòÕ»***************/
+/***************é¡ºåºæ ˆ***************/
 void InitSqStack(SqStack& S) {
 	S.top = -1;
 }
@@ -259,7 +276,7 @@ void PopSqStack(SqStack& S, Elemtype& num) {
 	if (EmptySqStack(S)) printf("This SqStack is empty"), exit(0);
 	else num = (S.data[S.top--]);
 }
-///***************Á´Õ»***************/
+///***************é“¾æ ˆ***************/
 void InitLinkStack(pLinkStack &S){
 	S = (pLinkStack)malloc(sizeof(LinkStack));
 	if (!S) printf("This LinkStack isn't be created"), exit(OVERFLOW);
@@ -299,7 +316,7 @@ void ClearStack(pLinkStack& S) {
 		free(p);
 	}
 }
-/***************Ñ­»·¶ÓÁĞ***************/
+/***************å¾ªç¯é˜Ÿåˆ—***************/
 void InitSqQueue(SqQueue& Q) {
 	Q.front = Q.rear = 0;
 }
@@ -310,7 +327,7 @@ bool FullSqQueue(SqQueue Q) {
 	return((Q.rear + 1) % MAX_LIST_LENGTH == Q.front);
 }
 void GetSqQueue(SqQueue Q, Verttype& num) {
-	if (Q.data[Q.front]) num = Q.data[Q.front];
+	if (Q.data[Q.front]!= -52) num = Q.data[Q.front];	//VS charåˆå§‹åŒ–ä¸º-52
 	else printf("this queue is empty"), exit(0);
 }
 void EnQueue(SqQueue& Q, Verttype num) {
@@ -323,7 +340,7 @@ void DeQueue(SqQueue& Q, Verttype& num) {
 	num = Q.data[Q.front];
 	Q.front = (Q.front + 1) % MAX_LIST_LENGTH;
 }
-/***************Á´Ê½¶ÓÁĞ***************/
+/***************é“¾å¼é˜Ÿåˆ—***************/
 void InitLinkQueue(LinkQueue& Q) {
 	Q.front = Q.rear = (pLinkNode)malloc(sizeof(LinkNode));
 	if (!Q.front) printf("This LinkQueue isn't be created"), exit(OVERFLOW);
@@ -359,9 +376,9 @@ void GetLinkQueue(LinkQueue& Q, Elemtype& num) {
 bool EmptyLinkQueue(LinkQueue Q) {
 	return (Q.front == Q.rear);
 }
-/**************Á´Ê½¶ş²æÊ÷**************/
+/**************é“¾å¼äºŒå‰æ ‘**************/
 void CreatLinkTree(pTNode& T) {
-	char c = 0;
+	Verttype c = 0;
 	scanf_s("%c", &c, 1);
 	T = (pTNode)malloc(sizeof(TNode));
 	if (!T) printf("This LinkTree is not creat"), exit(OVERFLOW);
@@ -379,6 +396,20 @@ void PreOrder(pTNode T) {
 		PreOrder(T->right);
 	}
 }
+void PreOrderDel(pTNode& T, Verttype c) {
+	if (T) {
+		if (c == T->data) {
+			if (T->left != NULL) PreOrderDel(T->left, T->left->data);
+			if (T->right != NULL) PreOrderDel(T->right, T->right->data);
+			free(T);
+			T = NULL;
+			return;
+		}
+		putchar(T->data);
+		PreOrderDel(T->left,c);
+		PreOrderDel(T->right,c);
+		}
+}
 void InOrder(pTNode T) {
 	if (T) {
 		InOrder(T->left);
@@ -394,41 +425,95 @@ void LatOrder(pTNode T) {
 	}
 }
 int DeepLinkTree(pTNode T) {
-	int m, n;		//m×ó×ÓÊ÷Éî¶È nÓÒ×ÓÊ÷Éî¶È
-	if (NULL == T)  return 0; 		//¸ùÎª¿Õ
-	if (NULL == T->left && NULL == T->right) { printf("%c:%d,", T->data,j); return 1; }			//¸ùÎªÒ¶×Ó
+	int m, n;		//må·¦å­æ ‘æ·±åº¦ nå³å­æ ‘æ·±åº¦
+	if (NULL == T)  return 0; 		//æ ¹ä¸ºç©º
+	if (NULL == T->left && NULL == T->right) { printf("%c:%d,", T->data,height); return 1; }			//æ ¹ä¸ºå¶å­
 	else {
-		j++;
+		height++;
 		m = DeepLinkTree(T->left);
 		n = DeepLinkTree(T->right);
-		j--;
+		height--;
 	}
 	if (m >= n) return m + 1;
 	else return n + 1;
 }
-/************ÁÚ½Ó¾ØÕó*************/
+/**************å“ˆå¤«æ›¼æ ‘**************/
+void Select(Huff T, int end, int& s1, int& s2){
+	int one = 0, two = 0, i = 1;		//åˆå§‹ä¸‹æ ‡
+	while (T[i].parent != 0 && i <= end) i++;		//æœªä½¿ç”¨ç»“ç‚¹
+	one = T[i].weight;
+	s1 = i++;
+	while (T[i].parent != 0 && i <= end) i++;
+	T[i].weight < one ? two = one, s2 = s1, one = T[i].weight, s1 = i :
+		two = T[i].weight, s2 = i;		//é—®å·è¡¨è¾¾å¼ï¼Œæ¯”å¤§å°
+	for (int j = i + 1; j <= end; j++)		//ä¸æœªä½¿ç”¨ç»“ç‚¹æ¯”è¾ƒå¤§å°
+	{
+		if (T[j].parent != 0) continue;		//ä½¿ç”¨å°±è·³è¿‡
+		T[j].weight < one ? two = one, one = T[j].weight, s2 = s1, s1 = j :		//æœªä½¿ç”¨ä¸”æ¯”æœ€å°çš„å°æ›¿æ¢
+			T[j].weight >= one && T[j].weight < two ? two = T[j].weight, s2 = j : 0;		//æœªä½¿ç”¨ä¸”æ¯”æœ€å°çš„å¤§ï¼Œæ¯”æœ€å¤§çš„å°æ›¿æ¢
+	}
+}
+void CreatHuffTree(Huff& T, HuffCo& C, int* w, int n, int& wpl) {
+	if (n <= 1) return; // å¦‚æœåªæœ‰ä¸€ä¸ªç¼–ç å°±ç›¸å½“äº0
+	int i, m = 2 * n - 1; // å“ˆå¤«æ›¼æ ‘æ€»èŠ‚ç‚¹æ•°ï¼Œnå°±æ˜¯å¶å­ç»“ç‚¹
+	for (i = 1; i <= n; i++, w++)		//åˆå§‹åŒ–
+		T[i] = { *w,0,0,0 };
+	for (i = n + 1; i <= m; i++)
+		T[i] = { 0,0,0,0 };
+	for (i = n + 1; i <= m; i++)		//æ„å»ºå“ˆå¤«æ›¼æ ‘
+	{
+		int s1 = 0, s2 = 0;
+		Select(T, i - 1, s1, s2);
+		T[s1].parent = T[s2].parent = i;
+		T[i].left = s1;
+		T[i].right = s2;
+		T[i].weight = T[s1].weight + T[s2].weight;
+	}
+	char code[MAX_LIST_LENGTH] = { 0 };		//å“ˆå¤«æ›¼ç¼–ç éƒ¨åˆ†
+	for (i = 1; i <= n; i++) {		//æƒå€¼å¾ªç¯
+		int heigh = 0, start = n - 1;
+		for (int c = i, f = T[i].parent; f != 0; c = f, f = T[f].parent) {
+			if (T[f].left == c) code[--start] = '0';		//è‹¥ä¸ºå·¦å­æ ‘ä¸º0,å³ä¸º1
+			else code[--start] = '1';
+		strcpy(&C[i][0], &code[start]);		//å¤åˆ¶
+		heigh++;
+		}
+		wpl += heigh * T[i].weight;
+	}
+}
+/************é‚»æ¥çŸ©é˜µ*************/
 void CreatGraph_AM(AMGraph &G) {
-	printf("¶¥µãÊı:");
+	printf("é¡¶ç‚¹æ•°:");
 	scanf_s("%d", &G.vexnum);
-	if (!G.vexnum) printf("Vex error"), exit(0);		//¶¥µãÊı´íÎó
-	printf("---------------\n»¡Êı:");
+	if (!G.vexnum) printf("Vex error"), exit(0);		//é¡¶ç‚¹æ•°é”™è¯¯
+	printf("---------------\nå¼§æ•°:");
 	scanf_s("%d", &G.arcnum);
-	if (G.arcnum > (G.vexnum * G.vexnum - 1) / 2) printf("Arc error"), exit(0);		//»¡Êı´íÎó
-	printf("---------------\n¶¥µã:");
-	for (int i = 0; i < G.vexnum; i++) scanf_s(" %c", &G.Vex[i], 1);		//½¨Á¢¶¥µã
-	for (int i = 0; i < G.arcnum; i++) {		//½¨Á¢»¡
+	if (G.arcnum > (G.vexnum * G.vexnum - 1) / 2) printf("Arc error"), exit(0);		//å¼§æ•°é”™è¯¯
+	printf("---------------\né¡¶ç‚¹:");
+	for (int i = 0; i < G.vexnum; i++) scanf_s(" %c", &G.Vex[i], 1);		//å»ºç«‹é¡¶ç‚¹
+	for (int i = 0; i < G.arcnum; i++) {		//å»ºç«‹å¼§
 		char out, in;
 		int one, two;
-		printf("---------------\n¶¥µã(³ö):");
+		printf("---------------\né¡¶ç‚¹(å‡º):");
 		scanf_s(" %c", &out, 1);
-		printf("¶¥µã(Èë):");
+		printf("é¡¶ç‚¹(å…¥):");
 		scanf_s(" %c", &in, 1);
 		one = Index(G, out);
 		two = Index(G, in);
-		if (one < 0 || two < 0) printf("Vex index error"), exit(0);		//¶¥µãĞòºÅ´íÎó
-		G.Edge[one][two] = false;
-		G.Edge[two][one] = false;
+		if (one < 0 || two < 0) printf("Vex index error"), exit(0);		//é¡¶ç‚¹åºå·é”™è¯¯
+		G.Edge[one][two] = false;		//VS boolå‹æ•°ç»„åˆå§‹åŒ–ä¸ºTrue
+		G.Edge[two][one] = false;		//Falseä¸ºå­˜åœ¨å¼§
 	}
+}
+int Arcnum(AMGraph G) {
+	int k = G.vexnum;
+	int num = 0;
+	for (int i = 0; i < k; i++) {
+		for (int j = 0; j <= i; j++) {
+			if (G.Edge[i][j] == false) num++;
+		}
+	}
+	return num;
 }
 int FirstNeighbor(AMGraph G, Verttype v) {
 	int n = Index(G, v);
@@ -457,15 +542,17 @@ void BFS_AM(AMGraph G, Verttype v) {
 			}
 	}
 }
-void BFS_AM_MIN(AMGraph G, Verttype v,Verttype e) {
-	int i, len[MAX_VERTEXNUM];			//»¡³¤
-	char path[MAX_VERTEXNUM] = {0};		//Â·¾¶
-	SqQueue Q;		//¸¨Öú¶ÓÁĞ
+void BFS_AM_MIN(AMGraph G, Verttype v, Verttype e) {
+	if (-1 == Index(G, v) || -1 == Index(G, e)) printf("è¾“å…¥é”™è¯¯"), exit(NOTFOUND);
+	int i, len[MAX_VERTEXNUM];			//å¼§é•¿
+	char path[MAX_VERTEXNUM] = { 0 };		//è·¯å¾„
+	SqQueue Q;		//è¾…åŠ©é˜Ÿåˆ—
 	InitSqQueue(Q);
 	len[Index(G, v)] = 0;
 	visited[Index(G, v)] = true;
-	EnQueue(Q, v);
-	while (!EmptySqQueue(Q)) {
+	EnQueue(Q, v); 
+	printf("è¾…åŠ©é˜Ÿåˆ—å‡ºé˜Ÿé¡ºåº:");
+	while (!EmptySqQueue(Q)) {	
 		DeQueue(Q, v);
 		printf("%c", v);
 		for (int w = FirstNeighbor(G, v); w >= 0; w = NextNeighbor(G, v, G.Vex[w]))
@@ -476,41 +563,44 @@ void BFS_AM_MIN(AMGraph G, Verttype v,Verttype e) {
 				EnQueue(Q, G.Vex[w]);
 			}
 	}
-	printf("\n---------------\n×î¶ÌÂ·¾¶³¤¶È:%d", len[Index(G, e)]);
-	printf("\nÂ·¾¶:%c",e);
-	for (i = Index(G, path[Index(G, e)]); path[i]!='\0'; i = Index(G, path[i]))
+	if (len[Index(G, e)] != -858993460) {	//VS intå‹åˆå§‹åŒ–å€¼
+		printf("\n---------------\næœ€çŸ­è·¯å¾„é•¿åº¦:%d", len[Index(G, e)]);
+		printf("\nè·¯å¾„:%c", e);
+		for (i = Index(G, path[Index(G, e)]); path[i] != '\0'; i = Index(G, path[i]))
+			printf("<-%c", G.Vex[i]);
 		printf("<-%c", G.Vex[i]);
-	printf("<-%c", G.Vex[i]);
+	}
+	else printf("\næ— è·¯å¾„å¯ä»%cè¾¾ç»“ç‚¹%c", v, e);
 }
 int Index(AMGraph G, Verttype v) {
 	for (int i = 0; i < G.vexnum; i++) 
 		if (v == G.Vex[i]) return i;
 	return -1;
 }
-/************ÁÚ½Ó±í*************/
+/************é‚»æ¥è¡¨*************/
 void CreatGraph_AL(ALGraph& G) {
 	pArcNode N;
-	printf("¶¥µãÊı:");
+	printf("é¡¶ç‚¹æ•°:");
 	scanf_s("%d", &G.vexnum);
-	if (!G.vexnum) printf("Vex error"), exit(0);		//¶¥µãÊı´íÎó
-	printf("---------------\n»¡Êı:");
+	if (!G.vexnum) printf("Vex error"), exit(0);		//é¡¶ç‚¹æ•°é”™è¯¯
+	printf("---------------\nå¼§æ•°:");
 	scanf_s("%d", &G.arcnum);
-	if (G.arcnum > (G.vexnum * G.vexnum - 1) / 2) printf("Arc error"), exit(0);		//»¡Êı´íÎó
-	printf("---------------\n¶¥µã:");
-	for (int i = 0; i < G.vexnum; i++) {		//½¨Á¢¶¥µã
+	if (G.arcnum > (G.vexnum * G.vexnum - 1) / 2) printf("Arc error"), exit(0);		//å¼§æ•°é”™è¯¯
+	printf("---------------\né¡¶ç‚¹:");
+	for (int i = 0; i < G.vexnum; i++) {		//å»ºç«‹é¡¶ç‚¹
 		scanf_s(" %c",&G.vertice[i].data,1);
 		G.vertice[i].first = NULL;
 	}
-	for (int i = 0; i < G.arcnum; i++) {		//½¨Á¢»¡
+	for (int i = 0; i < G.arcnum; i++) {		//å»ºç«‹å¼§
 		char out, in;
 		int one, two;
-		printf("---------------\n¶¥µã(³ö):");
+		printf("---------------\né¡¶ç‚¹(å‡º):");
 		scanf_s(" %c", &out, 1);
-		printf("¶¥µã(Èë):");
+		printf("é¡¶ç‚¹(å…¥):");
 		scanf_s(" %c", &in, 1);
 		one = Index(G, out);
 		two = Index(G, in);
-		if (one < 0 || two < 0) printf("Vex index error"), exit(0);		//¶¥µãĞòºÅ´íÎó
+		if (one < 0 || two < 0) printf("Vex index error"), exit(0);		//é¡¶ç‚¹åºå·é”™è¯¯
 		N = (pArcNode)malloc(sizeof(ArcNode));
 		if (!N) printf("This Node is not crate"), exit(OVERFLOW);
 		N->adjvex = G.vertice[two].data;
@@ -522,6 +612,19 @@ void CreatGraph_AL(ALGraph& G) {
 		N->next = G.vertice[two].first;
 		G.vertice[two].first = N;
 	}
+}
+int Arcnum(ALGraph G) {
+	int k = G.vexnum;
+	int num = 0;
+	pArcNode p;
+	for(int i=0;i<k;i++){
+		p = G.vertice[i].first;
+		while (p) {
+			num++;
+			p = p->next;
+		}
+	}
+	return num/2;
 }
 int FirstNeighbor(ALGraph G, Verttype v) {
 	int x = -1, i = Index(G, v);
@@ -537,8 +640,8 @@ int NextNeighbor(ALGraph G, Verttype v, Verttype m) {
 	if (p && !visited[i]) x = Index(G,p->adjvex);
 	return x;
 }
-void BFS_AL(ALGraph G, Verttype v) {
-	SqQueue Q;		//¸¨Öú¶ÓÁĞ
+bool BFS_AL(ALGraph G, Verttype v) {
+	SqQueue Q;		//è¾…åŠ©é˜Ÿåˆ—
 	InitSqQueue(Q);
 	visited[Index(G, v)] = true;
 	EnQueue(Q, v);
@@ -554,15 +657,27 @@ void BFS_AL(ALGraph G, Verttype v) {
 			p = p->next;
 		}
 	}
+	printf("\næ˜¯å¦è¿é€š:");
+	for (int i = 0; i < G.vexnum; i++) {
+		if (false == visited[i]) {
+			printf("FALSE");
+			return false;
+		}
+		else continue;
+	}
+	printf("TRUE");
+	return true;
 }
 void BFS_AL_MIN(ALGraph G, Verttype v, Verttype e) {
-	int i, len[MAX_VERTEXNUM];			//»¡³¤
-	char path[MAX_VERTEXNUM] = { 0 };		//Â·¾¶
-	SqQueue Q;		//¸¨Öú¶ÓÁĞ
+	if (-1 == Index(G, v) || -1 == Index(G, e)) printf("è¾“å…¥é”™è¯¯"), exit(NOTFOUND);
+	int i, len[MAX_VERTEXNUM];			//å¼§é•¿
+	char path[MAX_VERTEXNUM] = { 0 };		//è·¯å¾„
+	SqQueue Q;		//è¾…åŠ©é˜Ÿåˆ—
 	InitSqQueue(Q);
 	len[Index(G, v)] = 0;
 	visited[Index(G, v)] = true;
 	EnQueue(Q, v);
+	printf("è¾…åŠ©é˜Ÿåˆ—å‡ºé˜Ÿé¡ºåº:");
 	while (!EmptySqQueue(Q)) {
 		DeQueue(Q, v);
 		printf("%c", v);
@@ -577,11 +692,14 @@ void BFS_AL_MIN(ALGraph G, Verttype v, Verttype e) {
 			p = p->next;
 		}
 	}
-	printf("\n---------------\n×î¶ÌÂ·¾¶³¤¶È:%d", len[Index(G, e)]);
-	printf("\nÂ·¾¶:%c", e);
-	for (i = Index(G, path[Index(G, e)]); path[i] != '\0'; i = Index(G, path[i]))
+	if (len[Index(G, e)] != -858993460) {	//VS intå‹åˆå§‹åŒ–å€¼
+		printf("\n---------------\næœ€çŸ­è·¯å¾„é•¿åº¦:%d", len[Index(G, e)]);
+		printf("\nè·¯å¾„:%c", e);
+		for (i = Index(G, path[Index(G, e)]); path[i] != '\0'; i = Index(G, path[i]))
+			printf("<-%c", G.vertice[i].data);
 		printf("<-%c", G.vertice[i].data);
-	printf("<-%c", G.vertice[i].data);
+	}
+	else printf("\næ— è·¯å¾„å¯ä»%cè¾¾ç»“ç‚¹%c", v, e);
 }
 int Index(ALGraph G, Verttype v) {
 	for (int i = 0; i < G.vexnum; i++) 
